@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+</head>
+<body>
+    <h2>Home</h2>
+
+    <!-- Display the token for the user to copy -->
+    <div>
+        <label for="tokenDisplay">Your Token:</label>
+        <input type="text" id="tokenDisplay" readonly>
+    </div>
+
+    <h3>Fetch All Persons</h3>
+    <div>
+        <input type="text" id="fetchAllToken" placeholder="Token for Fetch All" required>
+        <button onclick="fetchAllPersons()">Fetch All Persons</button>
+    </div>
+    <div id="personsList">
+        <!-- Persons will be listed here -->
+    </div>
+
+    <!-- Section to fetch and display a single person -->
+    <h3>Fetch Person by ID</h3>
+    <form id="fetchPersonForm">
+        <input type="text" id="fetchToken" placeholder="Token for Fetch" required>
+        <input type="number" id="fetchId" placeholder="Person ID" required>
+        <button type="submit">Fetch Person</button>
+    </form>
+    <div id="singlePersonDetails">
+        <!-- Details of the fetched person will be displayed here -->
+    </div>
+
+    <!-- Form to create a new person -->
+    <h3>Create Person</h3>
+    <form id="createPersonForm">
+        <input type="text" id="token" placeholder="Token" required>
+        <!-- Input fields for person data -->
+        <input type="number" id="createId" placeholder="ID" required>
+        <input type="text" id="createName" placeholder="Name" required>
+        <input type="text" id="createAddress" placeholder="Address" required>
+        <input type="text" id="createPhoneNumber" placeholder="Phone Number" required>
+        <input type="text" id="createPersonnummer" placeholder="Personnummer" required>
+        <input type="number" id="createAccountBalance" placeholder="Account Balance" required>
+        <button type="submit">Create Person</button>
+    </form>
+
+    <!-- Form to update a person -->
+    <h3>Update Person</h3>
+    <form id="updatePersonForm">
+        <input type="text" id="tokenForUpdate" placeholder="Token" required>
+        <!-- Input fields for person data -->
+        <input type="number" id="updateId" placeholder="ID" required>
+        <input type="text" id="updateName" placeholder="Name" required>
+        <input type="text" id="updateAddress" placeholder="Address" required>
+        <input type="text" id="updatePhoneNumber" placeholder="Phone Number" required>
+        <input type="text" id="updatePersonnummer" placeholder="Personnummer" required>
+        <input type="number" id="updateAccountBalance" placeholder="Account Balance" required>
+        <button type="submit">Update Person</button>
+    </form>
+
+    <!-- Form to delete a person -->
+    <h3>Delete Person</h3>
+    <form id="deletePersonForm">
+        <input type="text" id="tokenForDelete" placeholder="Token" required>
+        <input type="number" id="deleteId" placeholder="ID" required>
+        <button type="submit">Delete Person</button>
+    </form>
+
+    <script>
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            if (token) {
+                document.getElementById('tokenDisplay').value = token;
+                loadPersons(token); // Load persons when the page loads with the token
+            }
+        };
+
+        // Function to load persons and display them
+        function loadPersons(token) {
+            fetch('/persons', { headers: { 'Authorization': token } })
+                .then(response => response.json())
+                .then(persons => {
+                    const personsList = document.getElementById('personsList');
+                    personsList.innerHTML = '';
+                    persons.forEach(person => {
+                        personsList.innerHTML += `<div> 
+                            ID: ${person.id}, 
+                            Name: ${person.name}, 
+                            Address: ${person.address}, 
+                            Phone: ${person.phone_number}, 
+                            Personnummer: ${person.personnummer}, 
+                            Balance: ${person.account_balance} </div>`;
+                    });
+                });
+        }
+
+        document.getElementById('fetchPersonForm').onsubmit = function(event) {
+        event.preventDefault();
+        const token = document.getElementById('fetchToken').value;
+        const personId = document.getElementById('fetchId').value;
+
+        fetch('/persons/' + personId, { headers: { 'Authorization': token } })
+            .then(response => response.json())
+            .then(person => {
+                const detailsDiv = document.getElementById('singlePersonDetails');
+                detailsDiv.innerHTML = `ID: ${person.id}, Name: ${person.name}, Address: ${person.address}, Phone: ${person.phone_number}, Personnummer: ${person.personnummer}, Balance: ${person.account_balance}`;
+            })
+            .catch(error => console.error('Error:', error));
+    };
+
+    function fetchAllPersons() {
+    const token = document.getElementById('fetchAllToken').value;
+    fetch('/persons', {
+        headers: {
+            'Authorization': 'Bearer ' + token  // Ensure the token is prefixed with 'Bearer'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        return response.json();
+    })
+    .then(persons => {
+        const personsList = document.getElementById('personsList');
+        personsList.innerHTML = '';
+        persons.forEach(person => {
+            personsList.innerHTML += `<div> 
+                ID: ${person.id}, 
+                Name: ${person.name}, 
+                Address: ${person.address}, 
+                Phone: ${person.phone_number}, 
+                Personnummer: ${person.personnummer}, 
+                Balance: ${person.account_balance} </div>`;
+        });
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error fetching persons: ' + error.message);
+    });
+}
+
+        // Add event listeners for CRUD operation forms
+        document.getElementById('createPersonForm').onsubmit = submitCreatePersonForm;
+        document.getElementById('updatePersonForm').onsubmit = submitUpdatePersonForm;
+        document.getElementById('deletePersonForm').onsubmit = submitDeletePersonForm;
+
+        function submitCreatePersonForm(event) {
+            event.preventDefault();
+            const token = document.getElementById('token').value;
+            const data = {
+                id: document.getElementById('createId').value,
+                name: document.getElementById('createName').value,
+                address: document.getElementById('createAddress').value,
+                phone_number: document.getElementById('createPhoneNumber').value,
+                personnummer: document.getElementById('createPersonnummer').value,
+                account_balance: document.getElementById('createAccountBalance').value
+            };
+
+            fetch('/persons', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                loadPersons(token); // Reload the list of persons
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+
+            function submitUpdatePersonForm(event) {
+                event.preventDefault();
+                const token = document.getElementById('tokenForUpdate').value;
+                const personId = document.getElementById('updateId').value;
+                const data = {
+                    name: document.getElementById('updateName').value,
+                    address: document.getElementById('updateAddress').value,
+                    phone_number: document.getElementById('updatePhoneNumber').value,
+                    personnummer: document.getElementById('updatePersonnummer').value,
+                    account_balance: document.getElementById('updateAccountBalance').value
+                };
+
+                fetch('/persons/' + personId, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    loadPersons(token); // Reload the list of persons
+                })
+                .catch(error => console.error('Error:', error));
+            }
+
+
+    function submitDeletePersonForm(event) {
+        event.preventDefault();
+        const token = document.getElementById('tokenForDelete').value;
+        const personId = document.getElementById('deleteId').value;
+
+        fetch('/persons/' + personId, {
+            method: 'DELETE',
+            headers: { 'Authorization': token }
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            loadPersons(token); // Reload the list of persons
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    </script>
+</body>
+</html>
