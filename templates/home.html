@@ -8,12 +8,13 @@
 <body>
     <h2>Home</h2>
 
-    <!-- Display the token for the user to copy -->
+    <!-- Display the user's token -->
     <div>
         <label for="tokenDisplay">Your Token:</label>
         <input type="text" id="tokenDisplay" readonly>
     </div>
 
+    <!-- Section to fetch all persons -->
     <h3>Fetch All Persons</h3>
     <div>
         <input type="text" id="fetchAllToken" placeholder="Token for Fetch All" required>
@@ -71,6 +72,7 @@
     </form>
 
     <script>
+        // Function to run when the page loads
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const token = urlParams.get('token');
@@ -88,6 +90,7 @@
                     const personsList = document.getElementById('personsList');
                     personsList.innerHTML = '';
                     persons.forEach(person => {
+                        // Display person details
                         personsList.innerHTML += `<div> 
                             ID: ${person.id}, 
                             Name: ${person.name}, 
@@ -99,57 +102,62 @@
                 });
         }
 
+        // Function to run when the "Fetch Person" form is submitted
         document.getElementById('fetchPersonForm').onsubmit = function(event) {
-        event.preventDefault();
-        const token = document.getElementById('fetchToken').value;
-        const personId = document.getElementById('fetchId').value;
+            event.preventDefault();
+            const token = document.getElementById('fetchToken').value;
+            const personId = document.getElementById('fetchId').value;
 
-        fetch('/persons/' + personId, { headers: { 'Authorization': token } })
-            .then(response => response.json())
-            .then(person => {
-                const detailsDiv = document.getElementById('singlePersonDetails');
-                detailsDiv.innerHTML = `ID: ${person.id}, Name: ${person.name}, Address: ${person.address}, Phone: ${person.phone_number}, Personnummer: ${person.personnummer}, Balance: ${person.account_balance}`;
+            fetch('/persons/' + personId, { headers: { 'Authorization': token } })
+                .then(response => response.json())
+                .then(person => {
+                    const detailsDiv = document.getElementById('singlePersonDetails');
+                    // Display details of the fetched person
+                    detailsDiv.innerHTML = `ID: ${person.id}, Name: ${person.name}, Address: ${person.address}, Phone: ${person.phone_number}, Personnummer: ${person.personnummer}, Balance: ${person.account_balance}`;
+                })
+                .catch(error => console.error('Error:', error));
+        };
+
+        // Function to run when the "Fetch All Persons" button is clicked
+        function fetchAllPersons() {
+            const token = document.getElementById('fetchAllToken').value;
+            fetch('/persons', {
+                headers: {
+                    'Authorization': 'Bearer ' + token  // Ensure the token is prefixed with 'Bearer'
+                }
             })
-            .catch(error => console.error('Error:', error));
-    };
-
-    function fetchAllPersons() {
-    const token = document.getElementById('fetchAllToken').value;
-    fetch('/persons', {
-        headers: {
-            'Authorization': 'Bearer ' + token  // Ensure the token is prefixed with 'Bearer'
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(persons => {
+                const personsList = document.getElementById('personsList');
+                personsList.innerHTML = '';
+                persons.forEach(person => {
+                    // Display a list of persons
+                    personsList.innerHTML += `<div> 
+                        ID: ${person.id}, 
+                        Name: ${person.name}, 
+                        Address: ${person.address}, 
+                        Phone: ${person.phone_number}, 
+                        Personnummer: ${person.personnummer}, 
+                        Balance: ${person.account_balance} </div>`;
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error fetching persons: ' + error.message);
+            });
         }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok ' + response.statusText);
-        }
-        return response.json();
-    })
-    .then(persons => {
-        const personsList = document.getElementById('personsList');
-        personsList.innerHTML = '';
-        persons.forEach(person => {
-            personsList.innerHTML += `<div> 
-                ID: ${person.id}, 
-                Name: ${person.name}, 
-                Address: ${person.address}, 
-                Phone: ${person.phone_number}, 
-                Personnummer: ${person.personnummer}, 
-                Balance: ${person.account_balance} </div>`;
-        });
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error fetching persons: ' + error.message);
-    });
-}
 
         // Add event listeners for CRUD operation forms
         document.getElementById('createPersonForm').onsubmit = submitCreatePersonForm;
         document.getElementById('updatePersonForm').onsubmit = submitUpdatePersonForm;
         document.getElementById('deletePersonForm').onsubmit = submitDeletePersonForm;
 
+        // Function to run when the "Create Person" form is submitted
         function submitCreatePersonForm(event) {
             event.preventDefault();
             const token = document.getElementById('token').value;
@@ -178,53 +186,52 @@
             .catch(error => console.error('Error:', error));
         }
 
+        // Function to run when the "Update Person" form is submitted
+        function submitUpdatePersonForm(event) {
+            event.preventDefault();
+            const token = document.getElementById('tokenForUpdate').value;
+            const personId = document.getElementById('updateId').value;
+            const data = {
+                name: document.getElementById('updateName').value,
+                address: document.getElementById('updateAddress').value,
+                phone_number: document.getElementById('updatePhoneNumber').value,
+                personnummer: document.getElementById('updatePersonnummer').value,
+                account_balance: document.getElementById('updateAccountBalance').value
+            };
 
-            function submitUpdatePersonForm(event) {
-                event.preventDefault();
-                const token = document.getElementById('tokenForUpdate').value;
-                const personId = document.getElementById('updateId').value;
-                const data = {
-                    name: document.getElementById('updateName').value,
-                    address: document.getElementById('updateAddress').value,
-                    phone_number: document.getElementById('updatePhoneNumber').value,
-                    personnummer: document.getElementById('updatePersonnummer').value,
-                    account_balance: document.getElementById('updateAccountBalance').value
-                };
+            fetch('/persons/' + personId, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                loadPersons(token); // Reload the list of persons
+            })
+            .catch(error => console.error('Error:', error));
+        }
 
-                fetch('/persons/' + personId, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': token
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                    loadPersons(token); // Reload the list of persons
-                })
-                .catch(error => console.error('Error:', error));
-            }
+        // Function to run when the "Delete Person" form is submitted
+        function submitDeletePersonForm(event) {
+            event.preventDefault();
+            const token = document.getElementById('tokenForDelete').value;
+            const personId = document.getElementById('deleteId').value;
 
-
-    function submitDeletePersonForm(event) {
-        event.preventDefault();
-        const token = document.getElementById('tokenForDelete').value;
-        const personId = document.getElementById('deleteId').value;
-
-        fetch('/persons/' + personId, {
-            method: 'DELETE',
-            headers: { 'Authorization': token }
-        })
-        .then(response => response.json())
-        .then(data => {
-            alert(data.message);
-            loadPersons(token); // Reload the list of persons
-        })
-        .catch(error => console.error('Error:', error));
-    }
-
+            fetch('/persons/' + personId, {
+                method: 'DELETE',
+                headers: { 'Authorization': token }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                loadPersons(token); // Reload the list of persons
+            })
+            .catch(error => console.error('Error:', error));
+        }
     </script>
 </body>
 </html>

@@ -7,6 +7,7 @@
 </head>
 <body>
     <h2>Login</h2>
+    <!-- Create a form for user login -->
     <form id="loginForm">
         <div>
             <label for="username">Username:</label>
@@ -20,12 +21,15 @@
     </form>
 
     <script>
+        // JavaScript code to handle form submission
         document.getElementById('loginForm').onsubmit = function(event) {
-            event.preventDefault();
+            event.preventDefault(); // Prevent the default form submission behavior
 
+            // Get the entered username and password
             var username = document.getElementById('username').value;
             var password = document.getElementById('password').value;
 
+            // Send a POST request to the '/login' endpoint with JSON data
             fetch('/login', {
                 method: 'POST',
                 headers: {
@@ -35,14 +39,16 @@
             })
             .then(response => {
                 if (response.ok) {
-                    return response.json();  // Convert to JSON if the response is successful
+                    return response.json();  // Convert the response to JSON if successful
                 }
                 throw new Error('Network response was not ok.');
             })
             .then(data => {
                 if (data.token) {
-                    window.location.href = '/?token=' + data.token;  // Redirect to home with token
+                    // If a token is received, redirect to the home page with the token
+                    window.location.href = '/?token=' + data.token;
                 } else {
+                    // If there's an error or no token, show an alert with the message
                     alert(data.message);
                 }
             })
@@ -50,7 +56,6 @@
                 console.error('Error:', error);
             });
         };
-
     </script>
 </body>
 </html>

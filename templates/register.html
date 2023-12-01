@@ -7,6 +7,7 @@
 </head>
 <body>
     <h2>Register</h2>
+    <!-- Create a form for user registration -->
     <form id="registerForm">
         <div>
             <label for="username">Username:</label>
@@ -24,17 +25,24 @@
     </form>
 
     <script>
+        // JavaScript code to handle form submission
         document.getElementById('registerForm').onsubmit = function(event) {
-            event.preventDefault();
+            event.preventDefault(); // Prevent the default form submission behavior
 
+            // Get the entered password and confirm password
             var password = document.getElementById('password').value;
             var confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Check if the passwords match
             if (password !== confirmPassword) {
                 alert("Passwords do not match.");
                 return;
             }
 
+            // Get the entered username
             var username = document.getElementById('username').value;
+
+            // Send a POST request to the '/register' endpoint with JSON data
             fetch('/register', {
                 method: 'POST',
                 headers: {
@@ -44,8 +52,9 @@
             })
             .then(response => response.json())
             .then(data => {
+                // Display a registration message or handle the response as needed
                 alert(data.message);
-                // Optionally redirect the user or clear the form
+                // Optionally, you can redirect the user or clear the form here
             })
             .catch((error) => {
                 console.error('Error:', error);
