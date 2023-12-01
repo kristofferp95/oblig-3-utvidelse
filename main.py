@@ -6,6 +6,24 @@ from functools import wraps  # Import a decorator for token verification
 from decimal import Decimal  # Import Decimal for precise floating-point arithmetic
 import os  # Import the 'os' module for working with environment variables
 
+
+# Security is paramount in this Flask app, where user authentication is the first layer of defense.
+# Users gets an acount and need to log in, ensuring that only authenticated users can access the API.
+# Upon successful login, a secure, unique token is generated. This token-based approach is chosen for its
+# statelessness, which is ideal for distributed systems where maintaining session state is impractical.
+# The token also has an expiration date, adding a temporal constraint that enhances security by limiting
+# the time window a token can be used, thus reducing the risk of token hijacking. Token expire after 2 days.
+# All CRUD operations require a valid token, ensuring that unauthorized users cannot access or modify data.
+# This strict enforcement of token-based authentication is balanced against usability, providing security
+# without significantly impacting the user experience.
+# For the database layer, we're using Amazon Keyspaces which requires separate authentication. Currently,
+# credentials are stored locally, which is a potential vulnerability. Ideally, credentials should be 
+# managed through a secrets management service like AWS Secrets Manager, which would allow secure storage 
+# and access to sensitive information such as database usernames and passwords. Implementing a secrets 
+# manager would bring us closer to the ultimate security goal by centralizing credential management and 
+# reducing the risk of credential leakage.
+
+
 # Create a Flask web application
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)  # Set a secret key for session security
